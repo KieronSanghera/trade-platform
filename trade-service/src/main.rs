@@ -1,22 +1,13 @@
-pub mod trade {
-    tonic::include_proto!("trade");
-}
-
-mod config; // Runtime configuration loader
-mod error; // Service-specific error types
-mod grpc; // gRPC service implementation
-mod health; // Health and Ready endpoints
-mod models; // Domain models
-mod producer; // Producer abstraction layer
+use trade_service::{config, grpc, health, producer, trade};
 
 use config::AppConfig;
 use grpc::trade_service::GrpcTradeService;
-use producer::{factory::build_producer, TradeEventProducer};
-use trade::trade_service_server::TradeServiceServer;
 use health::state::{LivenessState, ReadinessState};
+use producer::{TradeEventProducer, factory::build_producer};
+use trade::trade_service_server::TradeServiceServer;
 
-use std::{sync::Arc, time::Duration};
 use dotenv::dotenv;
+use std::{sync::Arc, time::Duration};
 use tokio::{sync::RwLock, task::JoinHandle, time::sleep};
 use tonic::transport::Server;
 use tracing_subscriber::EnvFilter;
@@ -169,11 +160,11 @@ fn spawn_readiness_monitor(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::producer::StubProducer;
     use serial_test::serial;
     use std::sync::Arc;
     use tokio::sync::RwLock;
     use tokio::task::JoinHandle;
+    use trade_service::producer::StubProducer;
 
     #[serial]
     #[test]
@@ -195,8 +186,8 @@ mod tests {
 
     #[tokio::test]
     async fn spawn_health_server_returns_joinhandle() {
-        let liveness = Arc::new(RwLock::new(crate::health::state::LivenessState::default()));
-        let readiness = Arc::new(RwLock::new(crate::health::state::ReadinessState::default()));
+        let liveness = Arc::new(RwLock::new(LivenessState::default()));
+        let readiness = Arc::new(RwLock::new(ReadinessState::default()));
 
         let handle: JoinHandle<()> = spawn_health_server(0, liveness, readiness);
         // Just assert it returns a JoinHandle
@@ -205,8 +196,8 @@ mod tests {
 
     #[tokio::test]
     async fn spawn_readiness_monitor_returns_joinhandle() {
-        let readiness = Arc::new(RwLock::new(crate::health::state::ReadinessState::default()));
-        let producer: Arc<dyn crate::producer::TradeEventProducer> = Arc::new(StubProducer);
+        let readiness = Arc::new(RwLock::new(ReadinessState::default()));
+        let producer: Arc<dyn TradeEventProducer> = Arc::new(StubProducer);
 
         let handle: JoinHandle<()> = spawn_readiness_monitor(readiness, producer, 1);
         assert!(handle.is_finished() == false);
