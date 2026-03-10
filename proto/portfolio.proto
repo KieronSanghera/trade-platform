@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package portfolio;
+
+message Position {
+    string asset = 1;
+    string net_quantity = 2;
+    string average_price = 3;
+}
+
+message GetPortfolioRequest {
+    string user_id = 1;
+}
+
+message GetPortfolioResponse {
+    string user_id = 1;
+    repeated Position positions = 2;
+}
+
+// Allow to get users portfolio
+service PortfolioService {
+    // Request using user_id, returns user_id and the positions
+    rpc GetPortfolio(GetPortfolioRequest) returns (GetPortfolioResponse);
+}

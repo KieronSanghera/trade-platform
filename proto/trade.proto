@@ -1,0 +1,32 @@
+syntax = "proto3";
+package trade;
+
+import "google/protobuf/timestamp.proto";
+
+
+enum TradeSide {
+    UNSPECIFIED = 0;
+    BUY = 1;
+    SELL = 2;
+}
+
+message TradeRequest {
+    string trade_id = 1;
+    string user_id = 2;
+    string asset = 3;
+    string quantity = 4;
+    string price = 5;
+    TradeSide side = 6;
+    google.protobuf.Timestamp timestamp = 7;
+}
+
+message TradeResponse {
+    bool accepted = 1;
+    string message = 2;
+}
+
+// Allows users to submit trades
+service TradeService {
+    // Submit trade with all the needed details
+    rpc SubmitTrade(TradeRequest) returns (TradeResponse);
+}

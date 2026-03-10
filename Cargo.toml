@@ -1,0 +1,7 @@
+[workspace]
+resolver = "3"
+members = [
+    "trade-service",
+    "portfolio-service",
+    "api-gateway-service"
+]
