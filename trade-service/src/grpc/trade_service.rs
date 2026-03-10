@@ -88,7 +88,9 @@ impl GrpcTradeService {
             TradeError::InvalidSide => Status::invalid_argument("side must be BUY or SELL"),
             TradeError::MissingTimestamp => Status::invalid_argument("timestamp is required"),
             TradeError::MissingAsset => Status::invalid_argument("asset is required"),
-            _ => Status::internal("internal trade service error"),
+            TradeError::FailedTimestampConversion => {
+                Status::invalid_argument("timestamp format is incorrect")
+            }
         }
     }
 }
