@@ -1,5 +1,5 @@
-use crate::models::trade_executed::TradeExecuted;
 use crate::producer::ProducerError;
+use shared::TradeExecuted;
 
 // Base Trait for other to extend
 #[async_trait::async_trait]

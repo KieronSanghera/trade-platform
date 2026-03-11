@@ -27,18 +27,6 @@ pub enum TradeError {
     InvalidSide,
 }
 
-#[derive(Debug, Error, PartialEq)]
-pub enum CustomTypeError {
-    #[error("Field is empty")]
-    EmptyString,
-
-    #[error("Decimal is invalid")]
-    InvalidDecimal,
-
-    #[error("Decimal is negative")]
-    NonPositiveDecimal,
-}
-
 #[derive(Debug, Error)]
 pub enum ConfigError {
     #[error("Invalid Kafka config: {0}")]

@@ -1,9 +1,9 @@
 use crate::error::TradeError;
 use crate::models::trade::Trade;
-use crate::models::trade_executed::TradeExecuted;
 use crate::producer::TradeEventProducer;
 use crate::trade::trade_service_server::TradeService;
 use crate::trade::{TradeRequest, TradeResponse};
+use shared::TradeExecuted;
 use std::sync::Arc;
 use tonic::{Request, Response, Status};
 use tracing::{error, info, instrument, warn};

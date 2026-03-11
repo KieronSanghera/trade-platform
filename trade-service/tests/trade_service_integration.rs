@@ -4,8 +4,8 @@ use prost_types::Timestamp;
 use tokio::net::TcpListener;
 use tonic::transport::Server;
 
+use shared::TradeExecuted;
 use trade_service::grpc::trade_service::GrpcTradeService;
-use trade_service::models::trade_executed::TradeExecuted;
 use trade_service::producer::{ProducerError, StubProducer, TradeEventProducer};
 use trade_service::trade::TradeRequest;
 use trade_service::trade::trade_service_client::TradeServiceClient;

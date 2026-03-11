@@ -1,10 +1,10 @@
-use crate::error::CustomTypeError;
+use crate::errors::CustomTypeError;
 use rust_decimal::Decimal;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::ops::Deref;
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct NonEmptyString(String);
 
 impl TryFrom<&str> for NonEmptyString {
@@ -33,7 +33,7 @@ impl fmt::Display for NonEmptyString {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct PositiveDecimal(Decimal);
 
 impl TryFrom<&str> for PositiveDecimal {

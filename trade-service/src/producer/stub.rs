@@ -1,6 +1,6 @@
 use super::producer_trait::TradeEventProducer;
-use crate::models::trade_executed::TradeExecuted;
 use crate::producer::ProducerError;
+use shared::models::TradeExecuted;
 
 pub struct StubProducer;
 
@@ -19,11 +19,8 @@ impl TradeEventProducer for StubProducer {
 
 #[cfg(test)]
 mod tests {
-    use crate::models::{
-        trade::Side,
-        types::{NonEmptyString, PositiveDecimal},
-    };
     use chrono::Utc;
+    use shared::{NonEmptyString, PositiveDecimal, Side};
 
     use super::*;
 

@@ -1,11 +1,12 @@
 use super::producer_trait::TradeEventProducer;
+use crate::config::KafkaConfig;
 use crate::producer::ProducerError;
-use crate::{config::KafkaConfig, models::trade_executed::TradeExecuted};
 use rdkafka::producer::Producer;
 use rdkafka::{
     ClientConfig,
     producer::{FutureProducer, FutureRecord},
 };
+use shared::models::TradeExecuted;
 use std::time::Duration;
 
 pub struct KafkaProducer {
@@ -85,11 +86,8 @@ impl KafkaProducer {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::models::{
-        trade::Side,
-        types::{NonEmptyString, PositiveDecimal},
-    };
     use chrono::Utc;
+    use shared::{NonEmptyString, PositiveDecimal, Side};
 
     // --- Helpers ---
     fn create_kafka_producer() -> KafkaProducer {

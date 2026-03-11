@@ -4,4 +4,4 @@ members = [
     "trade-service",
     "portfolio-service",
     "api-gateway-service"
-]
+, "shared"]

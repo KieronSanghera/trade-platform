@@ -1,10 +1,8 @@
 use crate::error::TradeError;
-use crate::models::types::{NonEmptyString, PositiveDecimal};
 use crate::trade::{TradeRequest, TradeSide};
 use chrono::{DateTime, Utc};
 use prost_types::Timestamp;
-use serde::Serialize;
-use std::fmt;
+use shared::{NonEmptyString, PositiveDecimal, Side, TradeExecuted};
 
 // Domain Model
 #[derive(Debug)]
@@ -16,23 +14,6 @@ pub struct Trade {
     pub quantity: PositiveDecimal,
     pub side: Side,
     pub timestamp: DateTime<Utc>,
-}
-
-// Enum for trade side
-#[derive(Debug, Clone, Copy, Serialize, PartialEq)]
-pub enum Side {
-    Buy,
-    Sell,
-}
-
-// Helper for outputting Side
-impl fmt::Display for Side {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Side::Buy => write!(f, "Buy"),
-            Side::Sell => write!(f, "Sell"),
-        }
-    }
 }
 
 // Helper to convert from incoming model to domain model
@@ -103,6 +84,21 @@ impl Trade {
         let checked_asset =
             NonEmptyString::try_from(asset).map_err(|_| TradeError::MissingAsset)?;
         Ok(checked_asset)
+    }
+}
+
+// Helper to convert Trade to TradeExecuted
+impl From<&Trade> for TradeExecuted {
+    fn from(trade: &Trade) -> Self {
+        TradeExecuted {
+            trade_id: trade.trade_id.clone(),
+            user_id: trade.user_id.clone(),
+            asset: trade.asset.clone(),
+            side: trade.side,
+            price: trade.price.clone(),
+            quantity: trade.quantity.clone(),
+            timestamp: trade.timestamp,
+        }
     }
 }
 
