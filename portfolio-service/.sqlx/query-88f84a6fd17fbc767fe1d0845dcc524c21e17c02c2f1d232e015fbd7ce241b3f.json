@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM positions WHERE user_id = $1 AND asset = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "88f84a6fd17fbc767fe1d0845dcc524c21e17c02c2f1d232e015fbd7ce241b3f"
+}

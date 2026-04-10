@@ -19,6 +19,18 @@ impl TryFrom<&str> for NonEmptyString {
     }
 }
 
+impl TryFrom<String> for NonEmptyString {
+    type Error = CustomTypeError;
+
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        if value.trim().is_empty() {
+            return Err(CustomTypeError::EmptyString);
+        }
+
+        Ok(Self(value))
+    }
+}
+
 impl Deref for NonEmptyString {
     type Target = str;
 
@@ -49,6 +61,18 @@ impl TryFrom<&str> for PositiveDecimal {
         }
 
         Ok(Self(parsed))
+    }
+}
+
+impl TryFrom<Decimal> for PositiveDecimal {
+    type Error = CustomTypeError;
+
+    fn try_from(value: Decimal) -> Result<Self, Self::Error> {
+        if value <= Decimal::ZERO {
+            return Err(CustomTypeError::NonPositiveDecimal);
+        };
+
+        Ok(Self(value))
     }
 }
 

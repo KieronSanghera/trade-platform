@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO positions (user_id, asset, quantity, avg_price)\n            VALUES ($1, $2, $3, $4)\n            ON CONFLICT (user_id, asset)\n            DO UPDATE SET quantity = $3, avg_price = $4",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Numeric",
+        "Numeric"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "e0f403a015e5aaf0ea70bcf810140948e4608d744a9359b98a8a5a0b344af219"
+}
