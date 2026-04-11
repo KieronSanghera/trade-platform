@@ -10,7 +10,6 @@ use rdkafka::{
 };
 use shared::TradeExecuted;
 use std::{str::from_utf8, time::Duration};
-use tracing;
 
 pub struct KafkaConsumer {
     consumer: StreamConsumer,
@@ -131,7 +130,6 @@ impl TradeEventConsumer for KafkaConsumer {
                 }
                 Err(ConsumerError::BadMessage(_)) => {
                     self.handle_bad_message(&message, message_bytes).await?;
-                    self.consumer.commit_message(&message, CommitMode::Sync)?;
                 }
                 Err(e) => {
                     return Err(e); // infrastructure - halt and retry

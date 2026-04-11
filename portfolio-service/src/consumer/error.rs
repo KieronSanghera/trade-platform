@@ -23,15 +23,10 @@ pub enum ConsumerError {
     #[error("Failed getting config for consumer: {0}")]
     ConsumerConfigError(#[from] crate::error::ConfigError),
 
-    #[error("Failed to process trade: {0}")]
-    ProcessingFailed(String),
-    
     // Error to be used to demonstrate, Real system would work differently
     #[error("Bad message - cannot be processed: {0}")]
     BadMessage(String),
-    
+
     #[error("Infrastructure Error - cannot be processed: {0}")]
     InfraError(String),
-
-
 }

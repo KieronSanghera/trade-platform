@@ -113,7 +113,11 @@ impl PostgresDB {
         )
         .execute(&self.pool)
         .await?;
-        tracing::info!(user_id = user_id, asset = asset, "Position deleted - quantity reached zero");
+        tracing::info!(
+            user_id = user_id,
+            asset = asset,
+            "Position deleted - quantity reached zero"
+        );
         Ok(())
     }
 

@@ -52,7 +52,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             readiness.write().await.mark_ready();
         }
         Err(e) => {
-            tracing::warn!(error = %e, "Producer readiness check failed");
+            tracing::warn!(error = %e, "Consumer readiness check failed");
             readiness.write().await.mark_unready();
         }
     }
@@ -184,13 +184,10 @@ fn spawn_kafka_consumer(db: Arc<PostgresDB>, consumer: Arc<KafkaConsumer>) -> Jo
                 .start(Box::new(move |trade| {
                     let db = db.clone();
                     Box::pin(async move {
-                        db.handle_position(&trade)
-                            .await
-                            .map_err(|e| match e {
-                                DbError::DatabaseConnectionError => ConsumerError::InfraError(e.to_string()),
-                                DbError::SqlxError(e) => ConsumerError::InfraError(e.to_string()),
-                                e => ConsumerError::BadMessage(e.to_string())
-                            })
+                        db.handle_position(&trade).await.map_err(|e| match e {
+                            DbError::SqlxError(e) => ConsumerError::InfraError(e.to_string()),
+                            e => ConsumerError::BadMessage(e.to_string()),
+                        })
                     })
                 }))
                 .await
