@@ -52,7 +52,7 @@ pub struct PostgresConfig {
     pub url: String,
 }
 
-// Create Kafka Config
+// Create Postgres Config
 impl PostgresConfig {
     pub fn from_env() -> Result<Self, ConfigError> {
         // Load vars in given struct from env where env vars are POSTGRES_(var name)

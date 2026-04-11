@@ -5,7 +5,3 @@ pub mod types;
 
 pub use error::ConsumerError;
 pub use types::Handler;
-
-// pub use kafka::KafkaProducer;
-// pub use producer_trait::TradeEventProducer;
-// pub use stub::StubProducer;

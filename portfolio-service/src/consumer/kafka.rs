@@ -125,8 +125,18 @@ impl TradeEventConsumer for KafkaConsumer {
             };
 
             tracing::info!(trade_id=%trade.trade_id, "Successfully Consumed Trade - Handling Trade");
-            handler(trade).await?;
-            self.consumer.commit_message(&message, CommitMode::Sync)?;
+            match handler(trade).await {
+                Ok(_) => {
+                    self.consumer.commit_message(&message, CommitMode::Sync)?;
+                }
+                Err(ConsumerError::BadMessage(_)) => {
+                    self.handle_bad_message(&message, message_bytes).await?;
+                    self.consumer.commit_message(&message, CommitMode::Sync)?;
+                }
+                Err(e) => {
+                    return Err(e); // infrastructure - halt and retry
+                }
+            }
         }
     }
 
@@ -177,7 +187,7 @@ mod tests {
     }
 
     #[test]
-    fn valid_trade_from_valid_bytes() {
+    fn valid_get_trade_from_message_bytes() {
         let initial_trade = create_trade_executed();
         let bytes: Vec<u8> = serde_json::to_vec(&initial_trade).unwrap();
         let rebuilt_trade_result = KafkaConsumer::get_trade_from_message_bytes(&bytes);
@@ -191,5 +201,20 @@ mod tests {
         assert_eq!(initial_trade.price, rebuilt_trade.price);
         assert_eq!(initial_trade.quantity, rebuilt_trade.quantity);
         assert_eq!(initial_trade.timestamp, rebuilt_trade.timestamp);
+    }
+
+    #[test]
+    fn invalid_bytes_get_trade_from_message_bytes() {
+        let invalid_bytes = vec![1];
+        let invalid_trade_result = KafkaConsumer::get_trade_from_message_bytes(&invalid_bytes);
+
+        assert!(invalid_trade_result.is_err())
+    }
+
+    #[test]
+    fn invalid_trade_get_trade_from_message_bytes() {
+        let invalid_bytes = b"hello world";
+        let invalid_trade_result = KafkaConsumer::get_trade_from_message_bytes(invalid_bytes);
+        assert!(invalid_trade_result.is_err())
     }
 }

@@ -25,4 +25,13 @@ pub enum ConsumerError {
 
     #[error("Failed to process trade: {0}")]
     ProcessingFailed(String),
+    
+    // Error to be used to demonstrate, Real system would work differently
+    #[error("Bad message - cannot be processed: {0}")]
+    BadMessage(String),
+    
+    #[error("Infrastructure Error - cannot be processed: {0}")]
+    InfraError(String),
+
+
 }

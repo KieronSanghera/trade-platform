@@ -4,7 +4,7 @@ use dotenv::dotenv;
 use portfolio_service::{
     config::{AppConfig, KafkaConfig, PostgresConfig},
     consumer::{ConsumerError, consumer_trait::TradeEventConsumer, kafka::KafkaConsumer},
-    db::postgres::PostgresDB,
+    db::{error::DbError, postgres::PostgresDB},
     grpc::portfolio_service::GrpcPortfolioService,
     health::{
         self,
@@ -74,7 +74,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let consumer_db = postgres.clone();
     let consumer_handle = consumer.clone();
-    spawn_kafka_consumer(consumer_db, consumer_handle).await;
+    spawn_kafka_consumer(consumer_db, consumer_handle);
 
     // Build Server
     let addr = format!("0.0.0.0:{}", &portfolio_service_config.port).parse()?;
@@ -170,7 +170,7 @@ fn spawn_readiness_monitor(
     })
 }
 
-async fn spawn_kafka_consumer(db: Arc<PostgresDB>, consumer: Arc<KafkaConsumer>) -> JoinHandle<()> {
+fn spawn_kafka_consumer(db: Arc<PostgresDB>, consumer: Arc<KafkaConsumer>) -> JoinHandle<()> {
     tokio::spawn(async move {
         tracing::info!("Starting Kafka consumer");
         let mut retry_status = false;
@@ -186,7 +186,11 @@ async fn spawn_kafka_consumer(db: Arc<PostgresDB>, consumer: Arc<KafkaConsumer>)
                     Box::pin(async move {
                         db.handle_position(&trade)
                             .await
-                            .map_err(|e| ConsumerError::ProcessingFailed(e.to_string()))
+                            .map_err(|e| match e {
+                                DbError::DatabaseConnectionError => ConsumerError::InfraError(e.to_string()),
+                                DbError::SqlxError(e) => ConsumerError::InfraError(e.to_string()),
+                                e => ConsumerError::BadMessage(e.to_string())
+                            })
                     })
                 }))
                 .await
