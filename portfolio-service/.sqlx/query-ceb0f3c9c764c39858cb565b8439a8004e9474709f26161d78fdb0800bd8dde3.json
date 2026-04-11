@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT quantity, avg_price FROM positions WHERE user_id = $1 AND asset = $2",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "quantity",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 1,
+        "name": "avg_price",
+        "type_info": "Numeric"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "ceb0f3c9c764c39858cb565b8439a8004e9474709f26161d78fdb0800bd8dde3"
+}

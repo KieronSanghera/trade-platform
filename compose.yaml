@@ -28,6 +28,23 @@ services:
       KAFKA_CLUSTERS_0_NAME: LocalCluster
     networks:
       - default
+    
+  postgres:
+    image: postgres:17
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: portfolio
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - default
+ 
+volumes:
+  postgres_data:
+    driver: local
 
 networks:
   default:
