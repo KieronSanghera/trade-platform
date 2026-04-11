@@ -61,6 +61,7 @@ export DATABASE_URL=postgres://postgres:postgres@localhost:5432/portfolio
 sqlx migrate run
 ```
 
+> To avoid installing sqlx please set: `export SQLX_OFFLINE=true`
 > Install sqlx-cli if needed: `cargo install sqlx-cli --no-default-features --features postgres`
 
 ---
