@@ -37,6 +37,10 @@ jobs:
 
       - name: clippy
         run: cargo clippy -- -D warnings
+        env:
+          SQLX_OFFLINE: true
 
       - name: test
         run: cargo test
+        env:
+          SQLX_OFFLINE: true
