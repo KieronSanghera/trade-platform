@@ -11,6 +11,7 @@ use rdkafka::{
 use shared::TradeExecuted;
 use std::{str::from_utf8, time::Duration};
 
+// Struct for kafka consumer that also ensures dead letter publishing
 pub struct KafkaConsumer {
     consumer: StreamConsumer,
     topic: String,
@@ -19,6 +20,7 @@ pub struct KafkaConsumer {
 }
 
 impl KafkaConsumer {
+    // Build consumer with dead letter producer baked in
     pub fn new(config: &KafkaConfig) -> Result<Self, ConsumerError> {
         let consumer = ClientConfig::new()
             .set("bootstrap.servers", &config.broker)
@@ -40,6 +42,7 @@ impl KafkaConsumer {
         })
     }
 
+    // Get bytes from the message
     pub fn get_payload_bytes<'a>(
         message: &'a BorrowedMessage<'a>,
     ) -> Result<&'a [u8], ConsumerError> {
@@ -47,12 +50,14 @@ impl KafkaConsumer {
         Ok(payload_bytes)
     }
 
+    // Convert Bytes to TradeExecuted transport model
     pub fn get_trade_from_message_bytes(bytes: &[u8]) -> Result<TradeExecuted, ConsumerError> {
         let payload = from_utf8(bytes)?;
         let trade: TradeExecuted = serde_json::from_str(payload)?;
         Ok(trade)
     }
 
+    // Publishing to dead letter
     async fn send_to_dead_letter(&self, message_as_bytes: &[u8]) -> Result<(), ConsumerError> {
         let record: FutureRecord<str, [u8]> =
             FutureRecord::to(&self.dead_letter_topic).payload(message_as_bytes);
@@ -64,6 +69,7 @@ impl KafkaConsumer {
         Ok(())
     }
 
+    // Handler for bad messages that need to be dead lettered
     async fn handle_bad_message(
         &self,
         message: &BorrowedMessage<'_>,
@@ -78,8 +84,10 @@ impl KafkaConsumer {
     }
 }
 
+// Implement contract from trait
 #[async_trait::async_trait]
 impl TradeEventConsumer for KafkaConsumer {
+    // Start Consumer loop
     async fn start(&self, handler: Handler) -> Result<(), ConsumerError> {
         self.consumer.subscribe(&[&self.topic])?;
         loop {
@@ -138,6 +146,7 @@ impl TradeEventConsumer for KafkaConsumer {
         }
     }
 
+    // Readiness handler
     async fn readiness_check(&self) -> Result<(), ConsumerError> {
         let metadata = self
             .consumer
@@ -145,9 +154,14 @@ impl TradeEventConsumer for KafkaConsumer {
             .fetch_metadata(None, Duration::from_secs(1))
             .map_err(ConsumerError::ConnectionFailed)?;
 
+        // Check both topics exist
         let topic_exists = metadata.topics().iter().any(|t| t.name() == self.topic);
+        let dead_letter_topic_exists = metadata
+            .topics()
+            .iter()
+            .any(|t| t.name() == self.dead_letter_topic);
 
-        if !topic_exists {
+        if !topic_exists || !dead_letter_topic_exists {
             return Err(ConsumerError::TopicMissing);
         }
         Ok(())

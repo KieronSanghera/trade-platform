@@ -28,6 +28,7 @@ impl PortfolioService for GrpcPortfolioService {
             "Received portfolio request"
         );
 
+        // Grab the whole portfolio
         let portfolio = self
             .db
             .get_portfolio(&request.user_id)
@@ -37,6 +38,7 @@ impl PortfolioService for GrpcPortfolioService {
                 _ => Status::internal("Database data error"),
             })?;
 
+        // Update list of positions to the response positions struct
         let positions = portfolio
             .into_iter()
             .map(Position::from)

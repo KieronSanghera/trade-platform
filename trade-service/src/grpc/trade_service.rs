@@ -49,7 +49,6 @@ impl TradeService for GrpcTradeService {
         "Trade validated"
         );
 
-        // Move to function that creates the TradeExecuted
         let executed_trade = TradeExecuted::from(&trade);
 
         self.producer

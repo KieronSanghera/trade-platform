@@ -8,23 +8,28 @@ use shared::{CustomTypeError, PositiveDecimal, Side, TradeExecuted};
 use sqlx::PgPool;
 use tracing::warn;
 
+// DB struct with connection pool
 pub struct PostgresDB {
     pool: PgPool,
 }
 
 impl PostgresDB {
+    // Create connection to DB
     pub async fn new(config: &PostgresConfig) -> Result<Self, DbError> {
         Ok(Self {
             pool: PgPool::connect(&config.url).await?,
         })
     }
 
+    // Ready if db is connected
     pub async fn readiness_check(&self) -> Result<(), DbError> {
         sqlx::query("SELECT 1").execute(&self.pool).await?;
         Ok(())
     }
 
+    // Handle position to upsert
     pub async fn handle_position(&self, trade: &TradeExecuted) -> Result<(), DbError> {
+        // Grab existing position
         let existing = sqlx::query!(
             "SELECT quantity, avg_price FROM positions WHERE user_id = $1 AND asset = $2",
             &*trade.user_id,
@@ -32,11 +37,11 @@ impl PostgresDB {
         )
         .fetch_optional(&self.pool)
         .await?;
-
         match existing {
             None => {
                 tracing::info!(user_id = &*trade.user_id, "New position");
                 match trade.side {
+                    // Cannot sell assets you do not have
                     Side::Sell => {
                         warn!(
                             asset = &*trade.asset,
@@ -52,12 +57,14 @@ impl PostgresDB {
                             quantity: trade.quantity.clone(),
                             avg_price: trade.price.clone(),
                         };
+                        // Insert new position
                         self.upsert_position(&position).await?;
                     }
                 }
             }
             Some(row) => {
                 tracing::info!(user_id = &*trade.user_id, "Existing position found");
+                // Update data to take into account the existing position
                 let (new_quantity, new_avg_price) = apply_trade_to_position(
                     row.quantity,
                     row.avg_price,
@@ -69,6 +76,7 @@ impl PostgresDB {
                 match new_quantity {
                     quantity if quantity < Decimal::ZERO => return Err(DbError::QuantityBelowZero),
                     quantity if quantity == Decimal::ZERO => {
+                        // No longer have a position
                         self.delete_position(&trade.user_id, &trade.asset).await?;
                     }
                     _ => {
@@ -80,6 +88,7 @@ impl PostgresDB {
                             avg_price: PositiveDecimal::try_from(new_avg_price)
                                 .map_err(|_| DbError::AvgPriceBelowZero)?,
                         };
+                        // Update position
                         self.upsert_position(&position).await?;
                     }
                 }
@@ -88,6 +97,7 @@ impl PostgresDB {
         Ok(())
     }
 
+    // Inserts or updates position
     async fn upsert_position(&self, position: &PortfolioPosition) -> Result<(), DbError> {
         sqlx::query!(
             "INSERT INTO positions (user_id, asset, quantity, avg_price)
@@ -105,6 +115,7 @@ impl PostgresDB {
         Ok(())
     }
 
+    // Delete position from DB
     async fn delete_position(&self, user_id: &str, asset: &str) -> Result<(), DbError> {
         sqlx::query!(
             "DELETE FROM positions WHERE user_id = $1 AND asset = $2",
@@ -121,6 +132,7 @@ impl PostgresDB {
         Ok(())
     }
 
+    // Grab all positions for a user
     pub async fn get_portfolio(&self, user_id: &str) -> Result<Vec<PortfolioPosition>, DbError> {
         let rows = sqlx::query_as!(
             RawPosition,
@@ -144,6 +156,7 @@ impl PostgresDB {
     }
 }
 
+// Update data from new and existing position
 fn apply_trade_to_position(
     // No zero decimals as the possible 0 division values are passed down as positive decimals
     current_quantity: Decimal,

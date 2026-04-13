@@ -2,6 +2,7 @@ use shared::{CustomTypeError, NonEmptyString, PositiveDecimal};
 
 use crate::{db::model::RawPosition, portfolio::Position};
 
+// Domain model
 pub struct PortfolioPosition {
     pub user_id: NonEmptyString,
     pub asset: NonEmptyString,
